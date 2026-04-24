@@ -156,6 +156,7 @@ function getKeyBgColor(key: string): string {
 }
 
 function getKeyTextColor(key: string): string {
+    if (key === "ENT" || key === "\u232B") return "#fff";
     const bg = getKeyBgColor(key);
     const r = parseInt(bg.slice(1, 3), 16);
     const g = parseInt(bg.slice(3, 5), 16);
