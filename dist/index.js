@@ -122,7 +122,7 @@ function updateKeyColors() {
         for (let col = 0; col < letters.length; col++) {
             const letter = letters[col];
             const rawColor = colors[col];
-            const newColor = rawColor === "#EEE" ? "#787c7e" : rawColor;
+            const newColor = rawColor === "#DDD" || rawColor === "#EEE" ? "#787c7e" : rawColor;
             const existing = keyColors.get(letter);
             if (existing === "#6aaa64")
                 continue;
