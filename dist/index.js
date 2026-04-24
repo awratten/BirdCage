@@ -1,5 +1,5 @@
 import { drawGrid, drawRoundedRect, fillRoundedRect, drawText } from "./cage.js";
-let SECRET_WORD = "HELLO";
+let SECRET_WORD = "";
 const MAX_GUESS = 6;
 const MAX_ROWS = MAX_GUESS;
 const MAX_COLS = 5;
@@ -167,7 +167,7 @@ function drawRoundRect(row, col, color) {
 function colorsForGuess(word) {
     const guess = word.toUpperCase().split("");
     const secret = SECRET_WORD.split("");
-    const result = new Array(MAX_COLS).fill("#EEE");
+    const result = new Array(MAX_COLS).fill("#DDD");
     // First pass: mark greens and count unmatched secret letters
     const unmatchedSecret = {};
     for (let i = 0; i < MAX_COLS; i++) {

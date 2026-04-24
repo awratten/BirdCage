@@ -1,30 +1,30 @@
 import { drawGrid, drawRoundedRect, fillRoundedRect, drawText } from "./cage.js";
 
-let SECRET_WORD = "HELLO";
+let SECRET_WORD: string = "";
 
-const MAX_GUESS = 6;
-const MAX_ROWS = MAX_GUESS;
-const MAX_COLS = 5;
-const CANVAS_WIDTH = window.innerWidth > 600 ? Math.min(500, window.innerWidth) : window.innerWidth; // Full width on mobile
-const GRID_SIZE = CANVAS_WIDTH / MAX_COLS;
+const MAX_GUESS: number = 6;
+const MAX_ROWS: number = MAX_GUESS;
+const MAX_COLS: number = 5;
+const CANVAS_WIDTH: number = window.innerWidth > 600 ? Math.min(500, window.innerWidth) : window.innerWidth; // Full width on mobile
+const GRID_SIZE: number = CANVAS_WIDTH / MAX_COLS;
 
-const DRAW_DEBUG_GRID = true;
+const DRAW_DEBUG_GRID: boolean = true;
 
-const FONT_SIZE = GRID_SIZE * 0.5;
+const FONT_SIZE: number = GRID_SIZE * 0.5;
 
-const KEYBOARD_PADDING = 10;
-const KEYBOARD_HEIGHT_PERCENTAGE = 0.25; // 25% of viewport height
-const MIN_KEYBOARD_HEIGHT = 80;
-const MAX_KEYBOARD_HEIGHT = 200;
-const KEY_GAP = 4;
-const KEY_RADIUS = 6;
-const SPECIAL_KEY_FRACTION = 0.13; // fraction of canvas width for Enter/Backspace keys
-const PIXEL_RATIO = (300/96);
+const KEYBOARD_PADDING: number = 10;
+const KEYBOARD_HEIGHT_PERCENTAGE: number = 0.25; // 25% of viewport height
+const MIN_KEYBOARD_HEIGHT: number = 80;
+const MAX_KEYBOARD_HEIGHT: number = 200;
+const KEY_GAP: number = 4;
+const KEY_RADIUS: number = 6;
+const SPECIAL_KEY_FRACTION: number = 0.13; // fraction of canvas width for Enter/Backspace keys
+const PIXEL_RATIO: number = (300/96);
 
 // Mutable keyboard dimensions that update on resize
-let KEYBOARD_HEIGHT = calculateKeyboardHeight();
-let KEY_W = (CANVAS_WIDTH / 10) - 5;
-let KEY_H = (KEYBOARD_HEIGHT / 3) - 5;
+let KEYBOARD_HEIGHT: number = calculateKeyboardHeight();
+let KEY_W: number = (CANVAS_WIDTH / 10) - 5;
+let KEY_H: number = (KEYBOARD_HEIGHT / 3) - 5;
 
 function calculateKeyboardHeight(): number {
     const targetHeight = window.innerHeight * KEYBOARD_HEIGHT_PERCENTAGE;
@@ -86,11 +86,11 @@ ctx.scale(PIXEL_RATIO, PIXEL_RATIO);
 // Enable anti-aliasing for text and images
 ctx.imageSmoothingEnabled = true;
 
-let redrawPending = false;
+let redrawPending: boolean = false;
 
 // Function to update keyboard dimensions on viewport changes
 function updateKeyboardDimensions() {
-    const newKeyboardHeight = calculateKeyboardHeight();
+    const newKeyboardHeight: number = calculateKeyboardHeight();
     if (newKeyboardHeight !== KEYBOARD_HEIGHT) {
         KEYBOARD_HEIGHT = newKeyboardHeight;
         KEY_H = (KEYBOARD_HEIGHT / 3) - 5;
@@ -106,7 +106,7 @@ window.addEventListener("orientationchange", updateKeyboardDimensions);
 
 async function loadListOfWords(url: string): Promise<string[]> {
     const response = await fetch(url);
-    const text = await response.text();
+    const text: string = await response.text();
     return text.split("\n").map(w => w.trim().toLowerCase()).filter(w => w.length === MAX_COLS);
 }
 
@@ -178,19 +178,19 @@ function updateKeyColors() {
 
 function drawOnScreenKeyboard() {
     keyHitAreas = [];
-    const kbY = height + KEYBOARD_PADDING;
+    const kbY: number = height + KEYBOARD_PADDING;
 
     KB_ROWS.forEach((row, rowIdx) => {
-        const rowWidth = row.reduce((s, k) => s + getKeyW(k), 0) + (row.length - 1) * KEY_GAP;
-        const startX = (width - rowWidth) / 2;
-        const rowY = kbY + rowIdx * (KEY_H + KEY_GAP);
+        const rowWidth: number = row.reduce((s, k) => s + getKeyW(k), 0) + (row.length - 1) * KEY_GAP;
+        const startX: number = (width - rowWidth) / 2;
+        const rowY: number = kbY + rowIdx * (KEY_H + KEY_GAP);
 
         let xCursor = startX;
         row.forEach((key, i) => {
-            const kw = getKeyW(key);
+            const kw: number = getKeyW(key);
             fillRoundedRect(ctx!, xCursor, rowY, kw, KEY_H, KEY_RADIUS, getKeyBgColor(key));
-            const label = key === "⌫" ? "\u232B" : key;
-            const fontSize = Math.round(KEY_W * 0.6);
+            const label: string = key === "⌫" ? "\u232B" : key;
+            const fontSize: number = Math.round(KEY_W * 0.6);
             drawText(ctx!, label, xCursor + kw / 2, rowY + KEY_H / 2+2, getKeyTextColor(key),
                 `${fontSize}px Arial`, "center", "middle");
             keyHitAreas.push({ key, x: xCursor, y: rowY, w: kw, h: KEY_H });
@@ -202,23 +202,23 @@ function drawOnScreenKeyboard() {
 
 function drawCharacter(char: string, row: number, col: number) {
     char = char.toUpperCase();
-    const x = gridSize * col + gridSize / 2;
-    const y = gridSize * row + gridSize / 2+2;
+    const x: number = gridSize * col + gridSize / 2;
+    const y: number = gridSize * row + gridSize / 2+2;
     drawText(ctx!, char, x, y, "#000", `${Math.round(FONT_SIZE)}px Arial`, "center", "middle");
 }
 
 function drawRoundRect(row: number, col: number, color: string) {
     const padding = gridSize * 0.1;
-    const x = gridSize * col + padding / 2;
-    const y = gridSize * row + padding / 2;
-    const size = gridSize - padding;
+    const x: number = gridSize * col + padding / 2;
+    const y: number = gridSize * row + padding / 2;
+    const size: number = gridSize - padding;
     fillRoundedRect(ctx!, x, y, size, size, 10, color);
 }
 
 function colorsForGuess(word: string): string[] {
-    const guess = word.toUpperCase().split("");
-    const secret = SECRET_WORD.split("");
-    const result: string[] = new Array(MAX_COLS).fill("#EEE");
+    const guess:  string[] = word.toUpperCase().split("");
+    const secret: string[] = SECRET_WORD.split("");
+    const result: string[] = new Array(MAX_COLS).fill("#DDD");
 
     // First pass: mark greens and count unmatched secret letters
     const unmatchedSecret: Record<string, number> = {};
@@ -233,7 +233,7 @@ function colorsForGuess(word: string): string[] {
     // Second pass: mark yellows, consuming one unmatched secret letter each time
     for (let i = 0; i < MAX_COLS; i++) {
         if (result[i] === "#6aaa64") continue;
-        const letter = guess[i]!;
+        const letter: string = guess[i]!;
         if ((unmatchedSecret[letter] ?? 0) > 0) {
             result[i] = "#c9b458";
             unmatchedSecret[letter]!--;
@@ -254,9 +254,9 @@ function checkGameState() {
 }
 
 function showGameEndModal() {
-    const modal = document.getElementById("modal")!;
-    const title = document.getElementById("modal-title")!;
-    const wordEl = document.getElementById("modal-word")!;
+    const modal: HTMLElement = document.getElementById("modal")!;
+    const title: HTMLElement = document.getElementById("modal-title")!;
+    const wordEl: HTMLElement = document.getElementById("modal-word")!;
     if (currentState === "won") {
         title.textContent = `You got it in ${guesses.length}!`;
         wordEl.textContent = `The word was ${SECRET_WORD}`;
@@ -290,7 +290,7 @@ function guessWord(word: string) {
 
 function drawWord(word: string, row: number) {
     word = word.toUpperCase();
-    const letters = word.split("");
+    const letters: string[] = word.split("");
     if (letters.length !== MAX_COLS) {
         throw new Error(`Word must have exactly ${MAX_COLS} letters`);
     }
@@ -301,12 +301,12 @@ function drawWord(word: string, row: number) {
     }
 }
 
-let lastKeyPressTime = 0;
-const KEY_PRESS_DEBOUNCE = 100; // 100ms debounce window for safety
+let lastKeyPressTime: number = 0;
+const KEY_PRESS_DEBOUNCE: number = 100; // 100ms debounce window for safety
 let lastInputSource: "keyboard" | "touch" | "mouse" | null = null;
 
 function handleKeyInput(key: string, source: "keyboard" | "touch" | "mouse") {
-    const now = Date.now();
+    const now: number = Date.now();
     
     // Prevent duplicate inputs from keyboard events (keyboard repeats)
     if (source === "keyboard" && now - lastKeyPressTime < KEY_PRESS_DEBOUNCE && lastInputSource === "keyboard") {
@@ -367,4 +367,5 @@ canvas.addEventListener("touchstart", (e: TouchEvent) => {
 }, { passive: false });
 
 requestRedraw();
+
 
