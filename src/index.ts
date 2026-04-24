@@ -46,6 +46,7 @@ let usedKeys: Set<string> = new Set();
 let currentState: "playing" | "won" | "lost" = "playing";
 
 let keyColors: Map<string, string> = new Map();
+let gridColors: string[][] = [];
 
 interface KeyHitArea {
     key: string;
@@ -163,15 +164,19 @@ function getKeyTextColor(key: string): string {
     return luminance > 0.5 ? "#000" : "#fff";
 }
 
-function updateKeyColors() {
+function updateGridColors() {
+    gridColors = guesses.map(guess => colorsForGuess(guess));
+}
+
+function updateKeyboardColors() {
     keyColors = new Map();
-    for (const guess of guesses) {
-        const letters = guess.toUpperCase().split("");
-        const colors = colorsForGuess(guess);
+    for (let i = 0; i < guesses.length; i++) {
+        const letters = guesses[i]!.toUpperCase().split("");
+        const colors = gridColors[i]!;
         for (let col = 0; col < letters.length; col++) {
             const letter = letters[col]!;
             const rawColor = colors[col]!;
-            const newColor = rawColor === "#DDD" || rawColor === "#EEE" ? "#4a4a4a" : rawColor;
+            const newColor = rawColor === "#DDD" || rawColor === "#EEE" ? "#878a8c" : rawColor;
             const existing = keyColors.get(letter);
             if (existing === "#6aaa64") continue;
             if (newColor === "#6aaa64" || newColor === "#c9b458" && existing !== "#6aaa64" || !existing) {
@@ -286,7 +291,8 @@ function guessWord(word: string) {
     currentGuess = "";
     usedKeys = new Set([...usedKeys, ...currentGuess.split("")]);
     // console.log("Used keys:", usedKeys);
-    updateKeyColors();
+    updateGridColors();
+    updateKeyboardColors();
     checkGameState();
     if (currentState === "won" || currentState === "lost") {
         setTimeout(showGameEndModal, 400);
@@ -299,7 +305,7 @@ function drawWord(word: string, row: number) {
     if (letters.length !== MAX_COLS) {
         throw new Error(`Word must have exactly ${MAX_COLS} letters`);
     }
-    const colors = colorsForGuess(word);
+    const colors = gridColors[row] ?? colorsForGuess(word);
     for (let col = 0; col < MAX_COLS; col++) {
         drawRoundRect(row, col, colors[col]!);
         drawCharacter(letters[col]!, row, col);
