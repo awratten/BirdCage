@@ -4,7 +4,7 @@ let SECRET_WORD = "HELLO";
 
 const MAX_ROWS = 6;
 const MAX_COLS = 5;
-const CANVAS_WIDTH = Math.min(500, window.innerWidth); // Change this to resize everything
+const CANVAS_WIDTH = window.innerWidth > 600 ? Math.min(500, window.innerWidth) : window.innerWidth; // Full width on mobile
 const GRID_SIZE = CANVAS_WIDTH / MAX_COLS;
 
 const DRAW_DEBUG_GRID = true;
@@ -268,12 +268,12 @@ function handleKeyInput(key: string) {
     currentRow = guesses.length;
     if (currentRow >= MAX_ROWS) return;
 
-    if (key === "Backspace" || key === "Bksp") {
+    if (key === "Backspace" || key === "Bksp" || key === "⌫") {
         if (currentGuess.length > 0) {
             currentGuess = currentGuess.slice(0, -1);
             requestRedraw();
         }
-    } else if (key === "Enter") {
+    } else if (key === "Enter" || key === "ENT") {
         if (currentState === "playing" && currentGuess.length === MAX_COLS) {
             guessWord(currentGuess);
             requestRedraw();
@@ -290,17 +290,29 @@ document.addEventListener("keydown", (e: KeyboardEvent) => {
     handleKeyInput(e.key);
 });
 
-canvas.addEventListener("mousedown", (e: MouseEvent) => {
+function handleCanvasClick(clientX: number, clientY: number) {
+    if (canvas === null) return;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    const mx = (e.clientX - rect.left) * scaleX;
-    const my = (e.clientY - rect.top) * scaleY;
+    const mx = (clientX - rect.left) * scaleX;
+    const my = (clientY - rect.top) * scaleY;
     for (const hit of keyHitAreas) {
         if (mx >= hit.x && mx <= hit.x + hit.w && my >= hit.y && my <= hit.y + hit.h) {
             handleKeyInput(hit.key);
             break;
         }
+    }
+}
+
+canvas.addEventListener("mousedown", (e: MouseEvent) => {
+    handleCanvasClick(e.clientX, e.clientY);
+});
+
+canvas.addEventListener("touchstart", (e: TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) {
+        handleCanvasClick(touch.clientX, touch.clientY);
     }
 });
 
