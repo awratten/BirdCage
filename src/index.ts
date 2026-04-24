@@ -265,14 +265,24 @@ function drawWord(word: string, row: number) {
 }
 
 let lastKeyPressTime = 0;
-const KEY_PRESS_DEBOUNCE = 50; // 50ms debounce window
+const KEY_PRESS_DEBOUNCE = 100; // 100ms debounce window for safety
+let lastInputSource: "keyboard" | "touch" | null = null;
 
-function handleKeyInput(key: string) {
+function handleKeyInput(key: string, source: "keyboard" | "touch") {
     const now = Date.now();
-    if (now - lastKeyPressTime < KEY_PRESS_DEBOUNCE) {
-        return; // Ignore duplicate key presses within debounce window
+    
+    // Prevent duplicate inputs from different sources within debounce window
+    if (now - lastKeyPressTime < KEY_PRESS_DEBOUNCE && lastInputSource === source) {
+        return; // Ignore duplicate key presses within debounce window from same source
     }
+    
+    // If different source but still within window, ignore it (this is the duplicate)
+    if (now - lastKeyPressTime < KEY_PRESS_DEBOUNCE && lastInputSource !== source) {
+        return;
+    }
+    
     lastKeyPressTime = now;
+    lastInputSource = source;
 
     currentRow = guesses.length;
     if (currentRow >= MAX_ROWS) return;
@@ -296,10 +306,10 @@ function handleKeyInput(key: string) {
 }
 
 document.addEventListener("keydown", (e: KeyboardEvent) => {
-    handleKeyInput(e.key);
+    handleKeyInput(e.key, "keyboard");
 });
 
-function handleCanvasClick(clientX: number, clientY: number) {
+function handleCanvasClick(clientX: number, clientY: number, source: "mouse" | "touch") {
     if (canvas === null) return;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -308,21 +318,21 @@ function handleCanvasClick(clientX: number, clientY: number) {
     const my = (clientY - rect.top) * scaleY;
     for (const hit of keyHitAreas) {
         if (mx >= hit.x && mx <= hit.x + hit.w && my >= hit.y && my <= hit.y + hit.h) {
-            handleKeyInput(hit.key);
+            handleKeyInput(hit.key, source);
             break;
         }
     }
 }
 
 canvas.addEventListener("mousedown", (e: MouseEvent) => {
-    handleCanvasClick(e.clientX, e.clientY);
+    handleCanvasClick(e.clientX, e.clientY, "mouse");
 });
 
 canvas.addEventListener("touchstart", (e: TouchEvent) => {
     e.preventDefault();
     const touch = e.touches[0];
     if (touch) {
-        handleCanvasClick(touch.clientX, touch.clientY);
+        handleCanvasClick(touch.clientX, touch.clientY, "touch");
     }
 });
 

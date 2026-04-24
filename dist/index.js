@@ -218,13 +218,20 @@ function drawWord(word, row) {
     }
 }
 let lastKeyPressTime = 0;
-const KEY_PRESS_DEBOUNCE = 50; // 50ms debounce window
-function handleKeyInput(key) {
+const KEY_PRESS_DEBOUNCE = 100; // 100ms debounce window for safety
+let lastInputSource = null;
+function handleKeyInput(key, source) {
     const now = Date.now();
-    if (now - lastKeyPressTime < KEY_PRESS_DEBOUNCE) {
-        return; // Ignore duplicate key presses within debounce window
+    // Prevent duplicate inputs from different sources within debounce window
+    if (now - lastKeyPressTime < KEY_PRESS_DEBOUNCE && lastInputSource === source) {
+        return; // Ignore duplicate key presses within debounce window from same source
+    }
+    // If different source but still within window, ignore it (this is the duplicate)
+    if (now - lastKeyPressTime < KEY_PRESS_DEBOUNCE && lastInputSource !== source) {
+        return;
     }
     lastKeyPressTime = now;
+    lastInputSource = source;
     currentRow = guesses.length;
     if (currentRow >= MAX_ROWS)
         return;
@@ -248,9 +255,9 @@ function handleKeyInput(key) {
     }
 }
 document.addEventListener("keydown", (e) => {
-    handleKeyInput(e.key);
+    handleKeyInput(e.key, "keyboard");
 });
-function handleCanvasClick(clientX, clientY) {
+function handleCanvasClick(clientX, clientY, source) {
     if (canvas === null)
         return;
     const rect = canvas.getBoundingClientRect();
@@ -260,19 +267,19 @@ function handleCanvasClick(clientX, clientY) {
     const my = (clientY - rect.top) * scaleY;
     for (const hit of keyHitAreas) {
         if (mx >= hit.x && mx <= hit.x + hit.w && my >= hit.y && my <= hit.y + hit.h) {
-            handleKeyInput(hit.key);
+            handleKeyInput(hit.key, source);
             break;
         }
     }
 }
 canvas.addEventListener("mousedown", (e) => {
-    handleCanvasClick(e.clientX, e.clientY);
+    handleCanvasClick(e.clientX, e.clientY, "mouse");
 });
 canvas.addEventListener("touchstart", (e) => {
     e.preventDefault();
     const touch = e.touches[0];
     if (touch) {
-        handleCanvasClick(touch.clientX, touch.clientY);
+        handleCanvasClick(touch.clientX, touch.clientY, "touch");
     }
 });
 pickFromWordList("src/words.txt").then(word => {
