@@ -305,8 +305,8 @@ canvas.addEventListener("mousedown", (e: MouseEvent) => {
 });
 
 pickFromWordList("src/words.txt").then(word => {
-    // SECRET_WORD = word;
-    SECRET_WORD = "HELLO";
+    SECRET_WORD = word;
+    // SECRET_WORD = "HELLO";
     // console.log("Secret word:", SECRET_WORD);
     requestRedraw();
 });
