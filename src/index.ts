@@ -19,6 +19,7 @@ const MAX_KEYBOARD_HEIGHT = 200;
 const KEY_GAP = 4;
 const KEY_RADIUS = 6;
 const SPECIAL_KEY_FRACTION = 0.13; // fraction of canvas width for Enter/Backspace keys
+const PIXEL_RATIO = window.devicePixelRatio || 1; // DPI scaling for high-resolution displays
 
 // Mutable keyboard dimensions that update on resize
 let KEYBOARD_HEIGHT = calculateKeyboardHeight();
@@ -71,19 +72,16 @@ const gridSize: number = GRID_SIZE;
 const width: number = GRID_SIZE * MAX_COLS;
 const height: number = GRID_SIZE * MAX_ROWS;
 
-// Get device pixel ratio for high-DPI displays
-const pixelRatio = window.devicePixelRatio || 1;
-
 // Apply DPI scaling to internal resolution
-canvas.width = width * pixelRatio;
-canvas.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) * pixelRatio;
+canvas.width = width * PIXEL_RATIO;
+canvas.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) * PIXEL_RATIO;
 
 // Set display size (physical size) in CSS
 canvas.style.width = width + "px";
 canvas.style.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) + "px";
 
 // Scale the context to match internal resolution
-ctx.scale(pixelRatio, pixelRatio);
+ctx.scale(PIXEL_RATIO, PIXEL_RATIO);
 
 let redrawPending = false;
 
@@ -93,7 +91,7 @@ function updateKeyboardDimensions() {
     if (newKeyboardHeight !== KEYBOARD_HEIGHT) {
         KEYBOARD_HEIGHT = newKeyboardHeight;
         KEY_H = (KEYBOARD_HEIGHT / 3) - 5;
-        canvas!.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) * pixelRatio;
+        canvas!.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) * PIXEL_RATIO;
         canvas!.style.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) + "px";
         requestRedraw();
     }
