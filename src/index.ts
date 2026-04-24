@@ -13,8 +13,8 @@ const FONT_SIZE = GRID_SIZE * 0.5;
 
 const KEYBOARD_PADDING = 10;
 const KEYBOARD_HEIGHT = 160;
-const KEY_W = 44;
-const KEY_H = 48;
+const KEY_W = (CANVAS_WIDTH / 10)-5;
+const KEY_H = (KEYBOARD_HEIGHT / 3)-5;
 const KEY_GAP = 4;
 const KEY_RADIUS = 6;
 const SPECIAL_KEY_FRACTION = 0.13; // fraction of canvas width for Enter/Backspace keys
