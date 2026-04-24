@@ -112,7 +112,12 @@ function getKeyBgColor(key) {
     return keyColors.get(key) ?? "#D3D6DA";
 }
 function getKeyTextColor(key) {
-    return getKeyBgColor(key) === "#D3D6DA" ? "#000" : "#fff";
+    const bg = getKeyBgColor(key);
+    const r = parseInt(bg.slice(1, 3), 16);
+    const g = parseInt(bg.slice(3, 5), 16);
+    const b = parseInt(bg.slice(5, 7), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5 ? "#000" : "#fff";
 }
 function updateKeyColors() {
     keyColors = new Map();
@@ -122,7 +127,7 @@ function updateKeyColors() {
         for (let col = 0; col < letters.length; col++) {
             const letter = letters[col];
             const rawColor = colors[col];
-            const newColor = rawColor === "#DDD" || rawColor === "#EEE" ? "#787c7e" : rawColor;
+            const newColor = rawColor === "#DDD" || rawColor === "#EEE" ? "#4a4a4a" : rawColor;
             const existing = keyColors.get(letter);
             if (existing === "#6aaa64")
                 continue;
