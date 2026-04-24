@@ -104,21 +104,17 @@ function updateKeyboardDimensions() {
 window.addEventListener("resize", updateKeyboardDimensions);
 window.addEventListener("orientationchange", updateKeyboardDimensions);
 
-const AllWords = await loadListOfWords("src/validwords.txt");
-
 async function loadListOfWords(url: string): Promise<string[]> {
     const response = await fetch(url);
     const text = await response.text();
-    return text.split("\n").map(w => w.trim()).filter(w => w.length === MAX_COLS);
+    return text.split("\n").map(w => w.trim().toLowerCase()).filter(w => w.length === MAX_COLS);
 }
 
-async function pickFromWordList(url: string): Promise<string> {
-    // const response = await fetch(url);
-    // const text = await response.text();
-    // const words = text.split("\n").map(w => w.trim()).filter(w => w.length === MAX_COLS);
-    
-    return AllWords[Math.floor(Math.random() * AllWords.length)]!.toUpperCase();
-}
+const SolutionWords = await loadListOfWords("src/solutions_nyt.txt");
+const NonSolutionWords = await loadListOfWords("src/nonsolutions_nyt.txt");
+const AllWords = [...SolutionWords, ...NonSolutionWords];
+
+SECRET_WORD = SolutionWords[Math.floor(Math.random() * SolutionWords.length)]!.toUpperCase();
 
 
 function requestRedraw() {
@@ -370,10 +366,5 @@ canvas.addEventListener("touchstart", (e: TouchEvent) => {
     }
 }, { passive: false });
 
-pickFromWordList("src/word.txt").then(word => {
-    SECRET_WORD = word;
-    // SECRET_WORD = "HELLO";
-    // console.log("Secret word:", SECRET_WORD);
-    requestRedraw();
-});
+requestRedraw();
 
