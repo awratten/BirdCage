@@ -70,8 +70,20 @@ if (!ctx) {
 const gridSize: number = GRID_SIZE;
 const width: number = GRID_SIZE * MAX_COLS;
 const height: number = GRID_SIZE * MAX_ROWS;
-canvas.width = width;
-canvas.height = height + KEYBOARD_HEIGHT + KEYBOARD_PADDING; // Extra space for keyboard
+
+// Get device pixel ratio for high-DPI displays
+const pixelRatio = window.devicePixelRatio || 1;
+
+// Apply DPI scaling to internal resolution
+canvas.width = width * pixelRatio;
+canvas.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) * pixelRatio;
+
+// Set display size (physical size) in CSS
+canvas.style.width = width + "px";
+canvas.style.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) + "px";
+
+// Scale the context to match internal resolution
+ctx.scale(pixelRatio, pixelRatio);
 
 let redrawPending = false;
 
@@ -81,7 +93,8 @@ function updateKeyboardDimensions() {
     if (newKeyboardHeight !== KEYBOARD_HEIGHT) {
         KEYBOARD_HEIGHT = newKeyboardHeight;
         KEY_H = (KEYBOARD_HEIGHT / 3) - 5;
-        canvas!.height = height + KEYBOARD_HEIGHT + KEYBOARD_PADDING;
+        canvas!.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) * pixelRatio;
+        canvas!.style.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) + "px";
         requestRedraw();
     }
 }
