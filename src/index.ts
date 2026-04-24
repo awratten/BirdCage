@@ -2,7 +2,8 @@ import { drawGrid, drawRoundedRect, fillRoundedRect, drawText } from "./cage.js"
 
 let SECRET_WORD = "HELLO";
 
-const MAX_ROWS = 6;
+const MAX_GUESS = 6;
+const MAX_ROWS = MAX_GUESS;
 const MAX_COLS = 5;
 const CANVAS_WIDTH = window.innerWidth > 600 ? Math.min(500, window.innerWidth) : window.innerWidth; // Full width on mobile
 const GRID_SIZE = CANVAS_WIDTH / MAX_COLS;
@@ -12,12 +13,22 @@ const DRAW_DEBUG_GRID = true;
 const FONT_SIZE = GRID_SIZE * 0.5;
 
 const KEYBOARD_PADDING = 10;
-const KEYBOARD_HEIGHT = 160;
-const KEY_W = (CANVAS_WIDTH / 10)-5;
-const KEY_H = (KEYBOARD_HEIGHT / 3)-5;
+const KEYBOARD_HEIGHT_PERCENTAGE = 0.25; // 25% of viewport height
+const MIN_KEYBOARD_HEIGHT = 80;
+const MAX_KEYBOARD_HEIGHT = 200;
 const KEY_GAP = 4;
 const KEY_RADIUS = 6;
 const SPECIAL_KEY_FRACTION = 0.13; // fraction of canvas width for Enter/Backspace keys
+
+// Mutable keyboard dimensions that update on resize
+let KEYBOARD_HEIGHT = calculateKeyboardHeight();
+let KEY_W = (CANVAS_WIDTH / 10) - 5;
+let KEY_H = (KEYBOARD_HEIGHT / 3) - 5;
+
+function calculateKeyboardHeight(): number {
+    const targetHeight = window.innerHeight * KEYBOARD_HEIGHT_PERCENTAGE;
+    return Math.max(MIN_KEYBOARD_HEIGHT, Math.min(MAX_KEYBOARD_HEIGHT, targetHeight));
+}
 const KB_ROWS: string[][] = [
     ["Q","W","E","R","T","Y","U","I","O","P"],
     ["A","S","D","F","G","H","J","K","L"],
@@ -63,6 +74,21 @@ canvas.width = width;
 canvas.height = height + KEYBOARD_HEIGHT + KEYBOARD_PADDING; // Extra space for keyboard
 
 let redrawPending = false;
+
+// Function to update keyboard dimensions on viewport changes
+function updateKeyboardDimensions() {
+    const newKeyboardHeight = calculateKeyboardHeight();
+    if (newKeyboardHeight !== KEYBOARD_HEIGHT) {
+        KEYBOARD_HEIGHT = newKeyboardHeight;
+        KEY_H = (KEYBOARD_HEIGHT / 3) - 5;
+        canvas!.height = height + KEYBOARD_HEIGHT + KEYBOARD_PADDING;
+        requestRedraw();
+    }
+}
+
+// Listen for window resize and orientation changes
+window.addEventListener("resize", updateKeyboardDimensions);
+window.addEventListener("orientationchange", updateKeyboardDimensions);
 
 const AllWords = await loadListOfWords("src/words.txt");
 
