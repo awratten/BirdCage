@@ -8,6 +8,8 @@ const MAX_COLS: number = 5;
 const CANVAS_WIDTH: number = window.innerWidth > 600 ? Math.min(500, window.innerWidth) : window.innerWidth; // Full width on mobile
 const GRID_SIZE: number = CANVAS_WIDTH / MAX_COLS;
 
+const GRID_COLOR: string= "#DDD"
+
 const DRAW_DEBUG_GRID: boolean = true;
 
 const FONT_SIZE: number = GRID_SIZE * 0.5;
@@ -131,7 +133,7 @@ function render() {
     redrawPending = false;
     ctx!.clearRect(0, 0, width, canvas.height);
     if (DRAW_DEBUG_GRID) {
-        drawGrid(ctx!, 0, 0, width, height, gridSize, gridSize);
+        drawGrid(ctx!, 0, 0, width, height, gridSize, gridSize, GRID_COLOR);
     }
 
     for (let row = 0; row < guesses.length; row++) {

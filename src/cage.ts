@@ -87,7 +87,7 @@ export function drawGrid(
     height: number,
     gridWidth: number,
     gridHeight: number,
-    color: string = "#AAA",
+    color: string = "#EEE",
     lineWidth: number = 1
 ): void {
     ctx.save();

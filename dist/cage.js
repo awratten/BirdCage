@@ -38,7 +38,7 @@ export function fillCircle(ctx, x, y, radius, color = "#000") {
     ctx.fill();
     ctx.restore();
 }
-export function drawGrid(ctx, offsetX, offsetY, width, height, gridWidth, gridHeight, color = "#AAA", lineWidth = 1) {
+export function drawGrid(ctx, offsetX, offsetY, width, height, gridWidth, gridHeight, color = "#EEE", lineWidth = 1) {
     ctx.save();
     ctx.strokeStyle = color;
     ctx.lineWidth = lineWidth;
