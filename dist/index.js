@@ -16,6 +16,10 @@ const KEY_GAP = 4;
 const KEY_RADIUS = 6;
 const SPECIAL_KEY_FRACTION = 0.13; // fraction of canvas width for Enter/Backspace keys
 const PIXEL_RATIO = (300 / 96);
+const FLIP_DURATION = 350; // ms for a single tile flip
+const FLIP_DELAY = 100; // ms pause between each tile
+const SHAKE_DURATION = 400; // ms for the invalid-word shake
+const SHAKE_AMPLITUDE = 3; // px horizontal offset at peak
 // Mutable keyboard dimensions that update on resize
 let KEYBOARD_HEIGHT = calculateKeyboardHeight();
 let KEY_W = (CANVAS_WIDTH / 10) - 5;
@@ -37,6 +41,8 @@ let currentState = "playing";
 let keyColors = new Map();
 let gridColors = [];
 let keyHitAreas = [];
+let flipAnim = { active: false, row: 0, tile: 0, startTime: 0 };
+let shakeAnim = { active: false, startTime: 0 };
 const canvas = document.getElementById("viewport");
 if (!(canvas instanceof HTMLCanvasElement)) {
     throw new Error("Canvas element not found");
@@ -97,13 +103,45 @@ function render() {
         drawGrid(ctx, 0, 0, width, height, gridSize, gridSize, GRID_COLOR);
     }
     for (let row = 0; row < guesses.length; row++) {
-        drawWord(guesses[row], row);
+        if (flipAnim.active && row === flipAnim.row) {
+            drawWordAnimating(row);
+        }
+        else {
+            drawWord(guesses[row], row);
+        }
     }
     const letters = currentGuess.split("");
+    const shakeOffset = getShakeOffset();
+    if (shakeOffset !== 0)
+        ctx.save(), ctx.translate(shakeOffset, 0);
     for (let col = 0; col < letters.length; col++) {
         drawCharacter(letters[col], currentRow, col);
     }
+    if (shakeOffset !== 0)
+        ctx.restore();
     drawOnScreenKeyboard();
+    if (flipAnim.active) {
+        const now = performance.now();
+        const elapsed = now - flipAnim.startTime;
+        if (elapsed >= FLIP_DURATION + FLIP_DELAY) {
+            flipAnim.tile++;
+            if (flipAnim.tile >= MAX_COLS) {
+                flipAnim.active = false;
+                updateKeyboardColors();
+                checkGameState();
+                if (currentState === "won" || currentState === "lost") {
+                    setTimeout(showGameEndModal, 400);
+                }
+            }
+            else {
+                flipAnim.startTime = performance.now();
+            }
+        }
+        requestAnimationFrame(render);
+    }
+    if (shakeAnim.active) {
+        requestAnimationFrame(render);
+    }
 }
 function getKeyW(key) {
     return (key === "ENT" || key === "⌫") ? width * SPECIAL_KEY_FRACTION : KEY_W;
@@ -176,6 +214,53 @@ function drawRoundRect(row, col, color) {
     const size = gridSize - padding;
     fillRoundedRect(ctx, x, y, size, size, 10, color);
 }
+// Draws a single tile mid-flip. progress 0→0.5: squish (unrevealed), 0.5→1: unsquish (revealed color).
+function drawFlipTile(row, col, char, progress) {
+    const padding = gridSize * 0.1;
+    const x = gridSize * col + padding / 2;
+    const y = gridSize * row + padding / 2;
+    const size = gridSize - padding;
+    const centerY = gridSize * row + gridSize / 2;
+    let scaleY;
+    let bgColor;
+    if (progress <= 0.5) {
+        scaleY = 1 - 2 * progress;
+        bgColor = "#EEE";
+    }
+    else {
+        scaleY = 2 * progress - 1;
+        bgColor = gridColors[row]?.[col] ?? "#DDD";
+    }
+    ctx.save();
+    ctx.translate(0, centerY);
+    ctx.scale(1, Math.max(scaleY, 0.001)); // avoid zero-scale ctx state
+    ctx.translate(0, -centerY);
+    fillRoundedRect(ctx, x, y, size, size, 10, bgColor);
+    drawText(ctx, char.toUpperCase(), gridSize * col + gridSize / 2, gridSize * row + gridSize / 2 + 2, "#000", `${Math.round(FONT_SIZE)}px Arial`, "center", "middle");
+    ctx.restore();
+}
+// Draws a guess row that is currently mid-animation.
+function drawWordAnimating(row) {
+    const word = guesses[row].toUpperCase();
+    const letters = word.split("");
+    const elapsed = performance.now() - flipAnim.startTime;
+    const tileProgress = Math.min(elapsed / FLIP_DURATION, 1);
+    for (let col = 0; col < MAX_COLS; col++) {
+        if (col < flipAnim.tile) {
+            // Already revealed — draw normally with final color
+            drawRoundRect(row, col, gridColors[row]?.[col] ?? "#DDD");
+            drawCharacter(letters[col], row, col);
+        }
+        else if (col === flipAnim.tile) {
+            // Currently flipping
+            drawFlipTile(row, col, letters[col], tileProgress);
+        }
+        else {
+            // Not yet flipped — letter only, no colored background (matches pre-submit look)
+            drawCharacter(letters[col], row, col);
+        }
+    }
+}
 function colorsForGuess(word) {
     const guess = word.toUpperCase().split("");
     const secret = SECRET_WORD.split("");
@@ -230,22 +315,38 @@ function showGameEndModal() {
 document.getElementById("modal-btn").addEventListener("click", () => {
     location.reload();
 });
+function getShakeOffset() {
+    if (!shakeAnim.active)
+        return 0;
+    const elapsed = performance.now() - shakeAnim.startTime;
+    if (elapsed >= SHAKE_DURATION) {
+        shakeAnim.active = false;
+        return 0;
+    }
+    const progress = elapsed / SHAKE_DURATION;
+    return SHAKE_AMPLITUDE * Math.sin(progress * Math.PI * 4) * (1 - progress);
+}
+function startShakeAnimation() {
+    shakeAnim = { active: true, startTime: performance.now() };
+    requestAnimationFrame(render);
+}
+function startFlipAnimation(row) {
+    flipAnim = { active: true, row, tile: 0, startTime: performance.now() };
+    requestAnimationFrame(render);
+}
 function guessWord(word) {
     checkGameState();
     // check if the guess is in the list of valid words words.txt)
     if (!AllWords.includes(currentGuess.toLowerCase())) {
+        startShakeAnimation();
         return;
     }
     guesses.push(currentGuess);
-    currentGuess = "";
     usedKeys = new Set([...usedKeys, ...currentGuess.split("")]);
-    // console.log("Used keys:", usedKeys);
+    currentGuess = "";
     updateGridColors();
-    updateKeyboardColors();
-    checkGameState();
-    if (currentState === "won" || currentState === "lost") {
-        setTimeout(showGameEndModal, 400);
-    }
+    // updateKeyboardColors and checkGameState are deferred to the end of the flip animation
+    startFlipAnimation(guesses.length - 1);
 }
 function drawWord(word, row) {
     word = word.toUpperCase();
@@ -270,6 +371,8 @@ function handleKeyInput(key, source) {
     }
     lastKeyPressTime = now;
     lastInputSource = source;
+    if (flipAnim.active)
+        return;
     currentRow = guesses.length;
     if (currentRow >= MAX_ROWS)
         return;
