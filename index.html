@@ -7,6 +7,14 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <div id="top-menu">
+      <button id="hamburger" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav id="menu-nav">
+        <a class="menu-item" href="#">Wordle</a>
+      </nav>
+    </div>
     <canvas id="viewport"></canvas>
 
     <div id="modal" class="modal hidden">
@@ -18,5 +26,19 @@
     </div>
 
     <script type="module" src="dist/index.js"></script>
+    <script>
+      const hamburger = document.getElementById('hamburger');
+      const menuNav = document.getElementById('menu-nav');
+      hamburger.addEventListener('click', () => {
+        const open = menuNav.classList.toggle('open');
+        hamburger.setAttribute('aria-expanded', open);
+      });
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#top-menu')) {
+          menuNav.classList.remove('open');
+          hamburger.setAttribute('aria-expanded', 'false');
+        }
+      });
+    </script>
   </body>
 </html>
