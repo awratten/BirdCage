@@ -19,7 +19,7 @@ const MAX_KEYBOARD_HEIGHT = 200;
 const KEY_GAP = 4;
 const KEY_RADIUS = 6;
 const SPECIAL_KEY_FRACTION = 0.13; // fraction of canvas width for Enter/Backspace keys
-const PIXEL_RATIO = (1200/96); // 600 DPI scaling (600 / 96 standard DPI)
+const PIXEL_RATIO = (300/96);
 
 // Mutable keyboard dimensions that update on resize
 let KEYBOARD_HEIGHT = calculateKeyboardHeight();
@@ -104,7 +104,7 @@ function updateKeyboardDimensions() {
 window.addEventListener("resize", updateKeyboardDimensions);
 window.addEventListener("orientationchange", updateKeyboardDimensions);
 
-const AllWords = await loadListOfWords("src/words.txt");
+const AllWords = await loadListOfWords("src/validwords.txt");
 
 async function loadListOfWords(url: string): Promise<string[]> {
     const response = await fetch(url);
@@ -312,13 +312,8 @@ let lastInputSource: "keyboard" | "touch" | "mouse" | null = null;
 function handleKeyInput(key: string, source: "keyboard" | "touch" | "mouse") {
     const now = Date.now();
     
-    // Prevent duplicate inputs from different sources within debounce window
-    if (now - lastKeyPressTime < KEY_PRESS_DEBOUNCE && lastInputSource === source) {
-        return; // Ignore duplicate key presses within debounce window from same source
-    }
-    
-    // If different source but still within window, ignore it (this is the duplicate)
-    if (now - lastKeyPressTime < KEY_PRESS_DEBOUNCE && lastInputSource !== source) {
+    // Prevent duplicate inputs from keyboard events (keyboard repeats)
+    if (source === "keyboard" && now - lastKeyPressTime < KEY_PRESS_DEBOUNCE && lastInputSource === "keyboard") {
         return;
     }
     
@@ -353,10 +348,8 @@ document.addEventListener("keydown", (e: KeyboardEvent) => {
 function handleCanvasClick(clientX: number, clientY: number, source: "mouse" | "touch") {
     if (canvas === null) return;
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const mx = (clientX - rect.left) * scaleX;
-    const my = (clientY - rect.top) * scaleY;
+    const mx = clientX - rect.left;
+    const my = clientY - rect.top;
     for (const hit of keyHitAreas) {
         if (mx >= hit.x && mx <= hit.x + hit.w && my >= hit.y && my <= hit.y + hit.h) {
             handleKeyInput(hit.key, source);
@@ -365,19 +358,19 @@ function handleCanvasClick(clientX: number, clientY: number, source: "mouse" | "
     }
 }
 
-canvas.addEventListener("mousedown", (e: MouseEvent) => {
+canvas.addEventListener("mouseup", (e: MouseEvent) => {
     handleCanvasClick(e.clientX, e.clientY, "mouse");
 });
 
-canvas.addEventListener("touchstart", (e: TouchEvent) => {
+canvas.addEventListener("touchend", (e: TouchEvent) => {
     e.preventDefault();
-    const touch = e.touches[0];
+    const touch = e.changedTouches[0];
     if (touch) {
         handleCanvasClick(touch.clientX, touch.clientY, "touch");
     }
 });
 
-pickFromWordList("src/words.txt").then(word => {
+pickFromWordList("src/word.txt").then(word => {
     SECRET_WORD = word;
     // SECRET_WORD = "HELLO";
     // console.log("Secret word:", SECRET_WORD);
