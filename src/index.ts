@@ -368,7 +368,7 @@ canvas.addEventListener("touchstart", (e: TouchEvent) => {
     if (touch) {
         handleCanvasClick(touch.clientX, touch.clientY, "touch");
     }
-});
+}, { passive: false });
 
 pickFromWordList("src/word.txt").then(word => {
     SECRET_WORD = word;

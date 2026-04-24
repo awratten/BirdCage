@@ -16,6 +16,7 @@ body {
 canvas {
   display: block;
   background: #EEE;
+  touch-action: none;
 }
 
 .modal {
