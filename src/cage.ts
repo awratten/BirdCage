@@ -123,6 +123,7 @@ export function drawText(
     ctx.font = font;
     ctx.textAlign = textAlign;
     ctx.textBaseline = textBaseline;
+    ctx.imageSmoothingEnabled = true;
     ctx.fillText(text, x, y);
     ctx.restore();
 }

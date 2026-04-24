@@ -14,7 +14,7 @@ const MAX_KEYBOARD_HEIGHT = 200;
 const KEY_GAP = 4;
 const KEY_RADIUS = 6;
 const SPECIAL_KEY_FRACTION = 0.13; // fraction of canvas width for Enter/Backspace keys
-const PIXEL_RATIO = window.devicePixelRatio || 1; // DPI scaling for high-resolution displays
+const PIXEL_RATIO = (1200 / 96); // 600 DPI scaling (600 / 96 standard DPI)
 // Mutable keyboard dimensions that update on resize
 let KEYBOARD_HEIGHT = calculateKeyboardHeight();
 let KEY_W = (CANVAS_WIDTH / 10) - 5;
@@ -54,6 +54,8 @@ canvas.style.width = width + "px";
 canvas.style.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) + "px";
 // Scale the context to match internal resolution
 ctx.scale(PIXEL_RATIO, PIXEL_RATIO);
+// Enable anti-aliasing for text and images
+ctx.imageSmoothingEnabled = true;
 let redrawPending = false;
 // Function to update keyboard dimensions on viewport changes
 function updateKeyboardDimensions() {

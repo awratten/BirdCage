@@ -62,6 +62,7 @@ export function drawText(ctx, text, x, y, color = "#000", font = "16px sans-seri
     ctx.font = font;
     ctx.textAlign = textAlign;
     ctx.textBaseline = textBaseline;
+    ctx.imageSmoothingEnabled = true;
     ctx.fillText(text, x, y);
     ctx.restore();
 }
