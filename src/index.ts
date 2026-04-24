@@ -12,8 +12,8 @@ const DRAW_DEBUG_GRID = true;
 const FONT_SIZE = GRID_SIZE * 0.5;
 
 const KEYBOARD_PADDING = 10;
-const KEYBOARD_HEIGHT = 96;
-const KEY_H = 28;
+const KEYBOARD_HEIGHT = 120;
+const KEY_H = 35;
 const KEY_GAP = 4;
 const KEY_RADIUS = 4;
 const SPECIAL_KEY_FRACTION = 0.13; // fraction of canvas width for Enter/Backspace keys
