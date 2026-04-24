@@ -12,10 +12,11 @@ const DRAW_DEBUG_GRID = true;
 const FONT_SIZE = GRID_SIZE * 0.5;
 
 const KEYBOARD_PADDING = 10;
-const KEYBOARD_HEIGHT = 120;
-const KEY_H = 35;
+const KEYBOARD_HEIGHT = 160;
+const KEY_W = 44;
+const KEY_H = 48;
 const KEY_GAP = 4;
-const KEY_RADIUS = 4;
+const KEY_RADIUS = 6;
 const SPECIAL_KEY_FRACTION = 0.13; // fraction of canvas width for Enter/Backspace keys
 const KB_ROWS: string[][] = [
     ["Q","W","E","R","T","Y","U","I","O","P"],
@@ -49,6 +50,7 @@ const canvas = document.getElementById("viewport") as HTMLCanvasElement | null;
 if (!(canvas instanceof HTMLCanvasElement)) {
     throw new Error("Canvas element not found");
 }
+
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D | null;
 if (!ctx) {
     throw new Error("Could not get canvas context");
@@ -107,8 +109,8 @@ function render() {
     drawOnScreenKeyboard();
 }
 
-function getKeyW(key: string, unit: number): number {
-    return (key === "ENT" || key === "⌫") ? width * SPECIAL_KEY_FRACTION : unit;
+function getKeyW(key: string): number {
+    return (key === "ENT" || key === "⌫") ? width * SPECIAL_KEY_FRACTION : KEY_W;
 }
 
 function getKeyBgColor(key: string): string {
@@ -141,20 +143,19 @@ function updateKeyColors() {
 function drawOnScreenKeyboard() {
     keyHitAreas = [];
     const kbY = height + KEYBOARD_PADDING;
-    const unit = (width - 9 * KEY_GAP) / 10; // unit width based on widest row (10 keys)
 
     KB_ROWS.forEach((row, rowIdx) => {
-        const rowWidth = row.reduce((s, k) => s + getKeyW(k, unit), 0) + (row.length - 1) * KEY_GAP;
+        const rowWidth = row.reduce((s, k) => s + getKeyW(k), 0) + (row.length - 1) * KEY_GAP;
         const startX = (width - rowWidth) / 2;
         const rowY = kbY + rowIdx * (KEY_H + KEY_GAP);
 
         let xCursor = startX;
         row.forEach((key, i) => {
-            const kw = getKeyW(key, unit);
+            const kw = getKeyW(key);
             fillRoundedRect(ctx!, xCursor, rowY, kw, KEY_H, KEY_RADIUS, getKeyBgColor(key));
             const label = key === "⌫" ? "\u232B" : key;
-            const fontSize = Math.round(unit * 0.6);
-            drawText(ctx!, label, xCursor + kw / 2, rowY + KEY_H / 2, getKeyTextColor(key),
+            const fontSize = Math.round(KEY_W * 0.6);
+            drawText(ctx!, label, xCursor + kw / 2, rowY + KEY_H / 2+2, getKeyTextColor(key),
                 `${fontSize}px Arial`, "center", "middle");
             keyHitAreas.push({ key, x: xCursor, y: rowY, w: kw, h: KEY_H });
             xCursor += kw + (i < row.length - 1 ? KEY_GAP : 0);
@@ -266,9 +267,9 @@ function drawWord(word: string, row: number) {
 
 let lastKeyPressTime = 0;
 const KEY_PRESS_DEBOUNCE = 100; // 100ms debounce window for safety
-let lastInputSource: "keyboard" | "touch" | null = null;
+let lastInputSource: "keyboard" | "touch" | "mouse" | null = null;
 
-function handleKeyInput(key: string, source: "keyboard" | "touch") {
+function handleKeyInput(key: string, source: "keyboard" | "touch" | "mouse") {
     const now = Date.now();
     
     // Prevent duplicate inputs from different sources within debounce window
