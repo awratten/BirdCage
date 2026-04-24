@@ -217,7 +217,14 @@ function drawWord(word, row) {
         drawCharacter(letters[col], row, col);
     }
 }
+let lastKeyPressTime = 0;
+const KEY_PRESS_DEBOUNCE = 50; // 50ms debounce window
 function handleKeyInput(key) {
+    const now = Date.now();
+    if (now - lastKeyPressTime < KEY_PRESS_DEBOUNCE) {
+        return; // Ignore duplicate key presses within debounce window
+    }
+    lastKeyPressTime = now;
     currentRow = guesses.length;
     if (currentRow >= MAX_ROWS)
         return;
@@ -262,6 +269,7 @@ canvas.addEventListener("mousedown", (e) => {
     handleCanvasClick(e.clientX, e.clientY);
 });
 canvas.addEventListener("touchstart", (e) => {
+    e.preventDefault();
     const touch = e.touches[0];
     if (touch) {
         handleCanvasClick(touch.clientX, touch.clientY);
