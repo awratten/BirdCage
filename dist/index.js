@@ -2,7 +2,7 @@ import { drawGrid, drawRoundedRect, fillRoundedRect, drawText } from "./cage.js"
 let SECRET_WORD = "HELLO";
 const MAX_ROWS = 6;
 const MAX_COLS = 5;
-const CANVAS_WIDTH = 300; // Change this to resize everything
+const CANVAS_WIDTH = Math.min(300, window.innerWidth); // Change this to resize everything
 const GRID_SIZE = CANVAS_WIDTH / MAX_COLS;
 const DRAW_DEBUG_GRID = true;
 const FONT_SIZE = GRID_SIZE * 0.5;
@@ -257,8 +257,8 @@ canvas.addEventListener("mousedown", (e) => {
     }
 });
 pickFromWordList("src/words.txt").then(word => {
-    // SECRET_WORD = word;
-    SECRET_WORD = "HELLO";
+    SECRET_WORD = word;
+    // SECRET_WORD = "HELLO";
     // console.log("Secret word:", SECRET_WORD);
     requestRedraw();
 });
