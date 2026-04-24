@@ -93,6 +93,9 @@ ctx.imageSmoothingEnabled = true;
 let redrawPending = false;
 // Function to update keyboard dimensions on viewport changes
 function updateKeyboardDimensions() {
+    if (canvas === null) {
+        return;
+    }
     const newKeyboardHeight = calculateKeyboardHeight();
     if (newKeyboardHeight !== KEYBOARD_HEIGHT) {
         KEYBOARD_HEIGHT = newKeyboardHeight;
@@ -141,7 +144,10 @@ function render() {
     if (shakeOffset !== 0)
         ctx.save(), ctx.translate(shakeOffset, 0);
     for (let col = 0; col < letters.length; col++) {
-        drawCharacter(letters[col], currentRow, col);
+        const char = letters[col];
+        if (!char)
+            continue;
+        drawCharacter(char, currentRow, col);
     }
     if (shakeOffset !== 0)
         ctx.restore();
@@ -362,7 +368,6 @@ function startFlipAnimation(row) {
 }
 function guessWord(word) {
     checkGameState();
-    // check if the guess is in the list of valid words words.txt)
     if (!AllWords.includes(currentGuess.toLowerCase())) {
         startShakeAnimation();
         return;
@@ -371,7 +376,6 @@ function guessWord(word) {
     usedKeys = new Set([...usedKeys, ...currentGuess.split("")]);
     currentGuess = "";
     updateGridColors();
-    // updateKeyboardColors and checkGameState are deferred to the end of the flip animation
     startFlipAnimation(guesses.length - 1);
 }
 function drawWord(word, row) {
@@ -387,7 +391,7 @@ function drawWord(word, row) {
     }
 }
 let lastKeyPressTime = 0;
-const KEY_PRESS_DEBOUNCE = 100; // 100ms debounce window for safety
+const KEY_PRESS_DEBOUNCE = 50; // 50ms debounce window for safety
 let lastInputSource = null;
 function handleKeyInput(key, source) {
     const now = Date.now();

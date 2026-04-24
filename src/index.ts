@@ -144,12 +144,13 @@ let redrawPending: boolean = false;
 
 // Function to update keyboard dimensions on viewport changes
 function updateKeyboardDimensions() {
+    if (canvas === null) {return}
     const newKeyboardHeight: number = calculateKeyboardHeight();
     if (newKeyboardHeight !== KEYBOARD_HEIGHT) {
         KEYBOARD_HEIGHT = newKeyboardHeight;
         KEY_H = (KEYBOARD_HEIGHT / 3) - 5;
-        canvas!.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) * PIXEL_RATIO;
-        canvas!.style.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) + "px";
+        canvas.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) * PIXEL_RATIO;
+        canvas.style.height = (height + KEYBOARD_HEIGHT + KEYBOARD_PADDING) + "px";
         requestRedraw();
     }
 }
@@ -197,9 +198,11 @@ function render() {
 
     const letters = currentGuess.split("");
     const shakeOffset = getShakeOffset();
-    if (shakeOffset !== 0) ctx!.save(), ctx!.translate(shakeOffset, 0);
+    if (shakeOffset !== 0) ctx.save(), ctx.translate(shakeOffset, 0);
     for (let col = 0; col < letters.length; col++) {
-        drawCharacter(letters[col]!, currentRow, col);
+        const char = letters[col];
+        if (!char) continue;
+        drawCharacter(char, currentRow, col);
     }
     if (shakeOffset !== 0) ctx!.restore();
 
@@ -237,6 +240,7 @@ function getKeyBgColor(key: string): string {
     if (key === "ENT" || key === "\u232B") return "#878a8c";
     return keyColors.get(key) ?? "#D3D6DA";
 }
+
 
 function getKeyTextColor(key: string): string {
     if (key === "ENT" || key === "\u232B") return "#fff";
@@ -302,19 +306,19 @@ function drawCharacter(char: string, row: number, col: number) {
 }
 
 function drawRoundRect(row: number, col: number, color: string) {
-    const padding = gridSize * 0.1;
-    const x: number = gridSize * col + padding / 2;
-    const y: number = gridSize * row + padding / 2;
-    const size: number = gridSize - padding;
+    const padding: number = gridSize * 0.1;
+    const x:       number = gridSize * col + padding / 2;
+    const y:       number = gridSize * row + padding / 2;
+    const size:    number = gridSize - padding;
     fillRoundedRect(ctx!, x, y, size, size, 10, color);
 }
 
 // Draws a single tile mid-flip. progress 0→0.5: squish (unrevealed), 0.5→1: unsquish (revealed color).
 function drawFlipTile(row: number, col: number, char: string, progress: number) {
-    const padding = gridSize * 0.1;
-    const x: number = gridSize * col + padding / 2;
-    const y: number = gridSize * row + padding / 2;
-    const size: number = gridSize - padding;
+    const padding: number = gridSize * 0.1;
+    const x:       number = gridSize * col + padding / 2;
+    const y:       number = gridSize * row + padding / 2;
+    const size:    number = gridSize - padding;
     const centerY: number = gridSize * row + gridSize / 2;
 
     let scaleY: number;
@@ -339,10 +343,10 @@ function drawFlipTile(row: number, col: number, char: string, progress: number) 
 
 // Draws a guess row that is currently mid-animation.
 function drawWordAnimating(row: number) {
-    const word = guesses[row]!.toUpperCase();
-    const letters = word.split("");
-    const elapsed = performance.now() - flipAnim.startTime;
-    const tileProgress = Math.min(elapsed / FLIP_DURATION, 1);
+    const word: string = guesses[row]!.toUpperCase();
+    const letters: string[] = word.split("");
+    const elapsed: number = performance.now() - flipAnim.startTime;
+    const tileProgress: number = Math.min(elapsed / FLIP_DURATION, 1);
 
     for (let col = 0; col < MAX_COLS; col++) {
         if (col < flipAnim.tile) {
@@ -398,8 +402,8 @@ function checkGameState() {
 }
 
 function showGameEndModal() {
-    const modal: HTMLElement = document.getElementById("modal")!;
-    const title: HTMLElement = document.getElementById("modal-title")!;
+    const modal:  HTMLElement = document.getElementById("modal")!;
+    const title:  HTMLElement = document.getElementById("modal-title")!;
     const wordEl: HTMLElement = document.getElementById("modal-word")!;
     if (currentState === gameState.Won) {
         title.textContent = `You got it in ${guesses.length}!`;
@@ -438,7 +442,7 @@ function startFlipAnimation(row: number) {
 
 function guessWord(word: string) {
     checkGameState();
-    // check if the guess is in the list of valid words words.txt)
+
     if (!AllWords.includes(currentGuess.toLowerCase())) {
         startShakeAnimation();
         return;
@@ -447,7 +451,7 @@ function guessWord(word: string) {
     usedKeys = new Set([...usedKeys, ...currentGuess.split("")]);
     currentGuess = "";
     updateGridColors();
-    // updateKeyboardColors and checkGameState are deferred to the end of the flip animation
+
     startFlipAnimation(guesses.length - 1);
 }
 
@@ -465,7 +469,7 @@ function drawWord(word: string, row: number) {
 }
 
 let lastKeyPressTime: number = 0;
-const KEY_PRESS_DEBOUNCE: number = 100; // 100ms debounce window for safety
+const KEY_PRESS_DEBOUNCE: number = 50; // 50ms debounce window for safety
 let lastInputSource: "keyboard" | "touch" | "mouse" | null = null;
 
 function handleKeyInput(key: string, source: "keyboard" | "touch" | "mouse") {
