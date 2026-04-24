@@ -34,6 +34,38 @@ let KEYBOARD_HEIGHT: number = calculateKeyboardHeight();
 let KEY_W: number = (CANVAS_WIDTH / 10) - 5;
 let KEY_H: number = (KEYBOARD_HEIGHT / 3) - 5;
 
+enum gameState {
+    Playing = "playing",
+    Won = "won",
+    Lost = "lost",
+}
+let currentState: gameState = gameState.Playing;
+
+
+enum LetterState {
+    Correct = "correct",
+    Present = "present",
+    Absent  = "absent",
+}
+
+function letterStateColor(state: LetterState): string {
+    switch (state) {
+        case LetterState.Correct: return "#6aaa64";
+        case LetterState.Present: return "#c9b458";
+        case LetterState.Absent:  return "#DDD";
+    }
+}
+
+function letterStateKeyColor(state: LetterState): string {
+    switch (state) {
+        case LetterState.Correct: return "#6aaa64";
+        case LetterState.Present: return "#c9b458";
+        case LetterState.Absent:  return "#878a8c";
+    }
+}
+
+
+
 function calculateKeyboardHeight(): number {
     const targetHeight = window.innerHeight * KEYBOARD_HEIGHT_PERCENTAGE;
     return Math.max(MIN_KEYBOARD_HEIGHT, Math.min(MAX_KEYBOARD_HEIGHT, targetHeight));
@@ -51,10 +83,9 @@ let currentRow: number = 0;
 
 let usedKeys: Set<string> = new Set();
 
-let currentState: "playing" | "won" | "lost" = "playing";
 
 let keyColors: Map<string, string> = new Map();
-let gridColors: string[][] = [];
+let gridColors: LetterState[][] = [];
 
 interface KeyHitArea {
     key: string;
@@ -183,7 +214,7 @@ function render() {
                 flipAnim.active = false;
                 updateKeyboardColors();
                 checkGameState();
-                if (currentState === "won" || currentState === "lost") {
+                if (currentState === gameState.Won || currentState === gameState.Lost) {
                     setTimeout(showGameEndModal, 400);
                 }
             } else {
@@ -225,14 +256,14 @@ function updateKeyboardColors() {
     keyColors = new Map();
     for (let i = 0; i < guesses.length; i++) {
         const letters = guesses[i]!.toUpperCase().split("");
-        const colors = gridColors[i]!;
+        const states = gridColors[i]!;
         for (let col = 0; col < letters.length; col++) {
             const letter = letters[col]!;
-            const rawColor = colors[col]!;
-            const newColor = rawColor === "#DDD" || rawColor === "#EEE" ? "#878a8c" : rawColor;
+            const state = states[col]!;
+            const newColor = letterStateKeyColor(state);
             const existing = keyColors.get(letter);
-            if (existing === "#6aaa64") continue;
-            if (newColor === "#6aaa64" || newColor === "#c9b458" && existing !== "#6aaa64" || !existing) {
+            if (existing === letterStateColor(LetterState.Correct)) continue;
+            if (state === LetterState.Correct || (state === LetterState.Present && existing !== letterStateColor(LetterState.Correct)) || !existing) {
                 keyColors.set(letter, newColor);
             }
         }
@@ -293,7 +324,7 @@ function drawFlipTile(row: number, col: number, char: string, progress: number) 
         bgColor = "#EEE";
     } else {
         scaleY = 2 * progress - 1;
-        bgColor = gridColors[row]?.[col] ?? "#DDD";
+        bgColor = letterStateColor(gridColors[row]?.[col] ?? LetterState.Absent);
     }
 
     ctx!.save();
@@ -316,7 +347,7 @@ function drawWordAnimating(row: number) {
     for (let col = 0; col < MAX_COLS; col++) {
         if (col < flipAnim.tile) {
             // Already revealed — draw normally with final color
-            drawRoundRect(row, col, gridColors[row]?.[col] ?? "#DDD");
+            drawRoundRect(row, col, letterStateColor(gridColors[row]?.[col] ?? LetterState.Absent));
             drawCharacter(letters[col]!, row, col);
         } else if (col === flipAnim.tile) {
             // Currently flipping
@@ -328,16 +359,16 @@ function drawWordAnimating(row: number) {
     }
 }
 
-function colorsForGuess(word: string): string[] {
+function colorsForGuess(word: string): LetterState[] {
     const guess:  string[] = word.toUpperCase().split("");
     const secret: string[] = SECRET_WORD.split("");
-    const result: string[] = new Array(MAX_COLS).fill("#DDD");
+    const result: LetterState[] = new Array(MAX_COLS).fill(LetterState.Absent);
 
     // First pass: mark greens and count unmatched secret letters
     const unmatchedSecret: Record<string, number> = {};
     for (let i = 0; i < MAX_COLS; i++) {
         if (guess[i] === secret[i]) {
-            result[i] = "#6aaa64";
+            result[i] = LetterState.Correct;
         } else {
             unmatchedSecret[secret[i]!] = (unmatchedSecret[secret[i]!] ?? 0) + 1;
         }
@@ -345,10 +376,10 @@ function colorsForGuess(word: string): string[] {
 
     // Second pass: mark yellows, consuming one unmatched secret letter each time
     for (let i = 0; i < MAX_COLS; i++) {
-        if (result[i] === "#6aaa64") continue;
+        if (result[i] === LetterState.Correct) continue;
         const letter: string = guess[i]!;
         if ((unmatchedSecret[letter] ?? 0) > 0) {
-            result[i] = "#c9b458";
+            result[i] = LetterState.Present;
             unmatchedSecret[letter]!--;
         }
     }
@@ -358,11 +389,11 @@ function colorsForGuess(word: string): string[] {
 
 function checkGameState() {
     if (guesses[guesses.length - 1] === SECRET_WORD) {
-        currentState = "won";
+        currentState = gameState.Won;
     } else if (guesses.length >= MAX_ROWS) {
-        currentState = "lost";
+        currentState = gameState.Lost;
     } else {
-        currentState = "playing";
+        currentState = gameState.Playing;
     }
 }
 
@@ -370,7 +401,7 @@ function showGameEndModal() {
     const modal: HTMLElement = document.getElementById("modal")!;
     const title: HTMLElement = document.getElementById("modal-title")!;
     const wordEl: HTMLElement = document.getElementById("modal-word")!;
-    if (currentState === "won") {
+    if (currentState === gameState.Won) {
         title.textContent = `You got it in ${guesses.length}!`;
         wordEl.textContent = `The word was ${SECRET_WORD}`;
     } else {
@@ -426,9 +457,9 @@ function drawWord(word: string, row: number) {
     if (letters.length !== MAX_COLS) {
         throw new Error(`Word must have exactly ${MAX_COLS} letters`);
     }
-    const colors = gridColors[row] ?? colorsForGuess(word);
+    const states = gridColors[row] ?? colorsForGuess(word);
     for (let col = 0; col < MAX_COLS; col++) {
-        drawRoundRect(row, col, colors[col]!);
+        drawRoundRect(row, col, letterStateColor(states[col]!));
         drawCharacter(letters[col]!, row, col);
     }
 }
@@ -459,12 +490,12 @@ function handleKeyInput(key: string, source: "keyboard" | "touch" | "mouse") {
             requestRedraw();
         }
     } else if (key === "Enter" || key === "ENT") {
-        if (currentState === "playing" && currentGuess.length === MAX_COLS) {
+        if (currentState === gameState.Playing && currentGuess.length === MAX_COLS) {
             guessWord(currentGuess);
             requestRedraw();
         }
     } else if (key.length === 1 && /^[A-Za-z]$/.test(key)) {
-        if (currentState === "playing" && currentGuess.length < MAX_COLS) {
+        if (currentState === gameState.Playing && currentGuess.length < MAX_COLS) {
             currentGuess += key.toUpperCase();
             requestRedraw();
         }
