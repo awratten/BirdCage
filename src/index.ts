@@ -362,7 +362,7 @@ canvas.addEventListener("mouseup", (e: MouseEvent) => {
     handleCanvasClick(e.clientX, e.clientY, "mouse");
 });
 
-canvas.addEventListener("touchend", (e: TouchEvent) => {
+canvas.addEventListener("touchstart", (e: TouchEvent) => {
     e.preventDefault();
     const touch = e.changedTouches[0];
     if (touch) {

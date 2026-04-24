@@ -301,7 +301,7 @@ function handleCanvasClick(clientX, clientY, source) {
 canvas.addEventListener("mouseup", (e) => {
     handleCanvasClick(e.clientX, e.clientY, "mouse");
 });
-canvas.addEventListener("touchend", (e) => {
+canvas.addEventListener("touchstart", (e) => {
     e.preventDefault();
     const touch = e.changedTouches[0];
     if (touch) {
