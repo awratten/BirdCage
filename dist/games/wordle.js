@@ -18,11 +18,8 @@ export function createWordleGame(canvas, ctx) {
     const MAX_GUESS = 6;
     const MAX_ROWS = MAX_GUESS;
     const MAX_COLS = 5;
-    const CANVAS_WIDTH = window.innerWidth > 600 ? Math.min(500, window.innerWidth) : window.innerWidth;
-    const GRID_SIZE = CANVAS_WIDTH / MAX_COLS;
     const GRID_COLOR = "#DDD";
     const DRAW_DEBUG_GRID = true;
-    const FONT_SIZE = GRID_SIZE * 0.5;
     const KEYBOARD_PADDING = 10;
     const KEYBOARD_HEIGHT_PCT = 0.25;
     const MIN_KEYBOARD_HEIGHT = 80;
@@ -36,17 +33,21 @@ export function createWordleGame(canvas, ctx) {
     const SHAKE_DURATION = 400;
     const SHAKE_AMPLITUDE = 3;
     const KEY_PRESS_DEBOUNCE = 50;
+    const MENU_BAR_HEIGHT = 48;
     const KB_ROWS = [
         ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
         ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
         ["ENT", "Z", "X", "C", "V", "B", "N", "M", "⌫"],
     ];
-    const gridWidth = GRID_SIZE * MAX_COLS;
-    const gridHeight = GRID_SIZE * MAX_ROWS;
-    // ─── mutable state (reset in start()) ────────────────────────────────────
-    let KEYBOARD_HEIGHT = calcKeyboardHeight();
-    let KEY_W = (CANVAS_WIDTH / 10) - 5;
-    let KEY_H = (KEYBOARD_HEIGHT / 3) - 5;
+    // ─── mutable dimensions (recalculated on resize) ───────────────────────────
+    let CANVAS_WIDTH;
+    let GRID_SIZE;
+    let FONT_SIZE;
+    let gridWidth;
+    let gridHeight;
+    let KEYBOARD_HEIGHT;
+    let KEY_W;
+    let KEY_H;
     let SECRET_WORD = "";
     let AllWords = [];
     let guesses = [];
@@ -72,6 +73,21 @@ export function createWordleGame(canvas, ctx) {
     let _onTouchStart = () => { };
     let _onModalBtn = () => { };
     // ─── helpers ─────────────────────────────────────────────────────────────
+    function calculateDimensions() {
+        // Use the smaller of width and height (minus menu bar) to constrain grid
+        const constraint = Math.min(window.innerWidth, window.innerHeight - MENU_BAR_HEIGHT);
+        // Calculate canvas width based on constraint, with reasonable bounds
+        CANVAS_WIDTH = window.innerWidth > 600 ? Math.min(500, constraint) : constraint;
+        // All grid dimensions flow from CANVAS_WIDTH
+        GRID_SIZE = CANVAS_WIDTH / MAX_COLS;
+        FONT_SIZE = GRID_SIZE * 0.5;
+        gridWidth = GRID_SIZE * MAX_COLS;
+        gridHeight = GRID_SIZE * MAX_ROWS;
+        // Keyboard dimensions
+        KEYBOARD_HEIGHT = calcKeyboardHeight();
+        KEY_W = (CANVAS_WIDTH / 10) - 5;
+        KEY_H = (KEYBOARD_HEIGHT / 3) - 5;
+    }
     function calcKeyboardHeight() {
         const t = window.innerHeight * KEYBOARD_HEIGHT_PCT;
         return Math.max(MIN_KEYBOARD_HEIGHT, Math.min(MAX_KEYBOARD_HEIGHT, t));
@@ -85,10 +101,11 @@ export function createWordleGame(canvas, ctx) {
         ctx.imageSmoothingEnabled = true;
     }
     function updateKeyboardDimensions() {
-        const newH = calcKeyboardHeight();
-        if (newH !== KEYBOARD_HEIGHT) {
-            KEYBOARD_HEIGHT = newH;
-            KEY_H = (KEYBOARD_HEIGHT / 3) - 5;
+        const oldWidth = gridWidth;
+        const oldHeight = KEYBOARD_HEIGHT;
+        calculateDimensions();
+        // Check if anything actually changed
+        if (oldWidth !== gridWidth || oldHeight !== KEYBOARD_HEIGHT) {
             resizeCanvas();
             requestRedraw();
         }
@@ -445,8 +462,8 @@ export function createWordleGame(canvas, ctx) {
         redrawPending = false;
         flipAnim = { active: false, row: 0, tile: 0, startTime: 0 };
         shakeAnim = { active: false, startTime: 0 };
-        KEYBOARD_HEIGHT = calcKeyboardHeight();
-        KEY_H = (KEYBOARD_HEIGHT / 3) - 5;
+        // Calculate all dimensions based on current viewport
+        calculateDimensions();
         resizeCanvas();
         const [solWords, nonsolWords] = await Promise.all([
             loadWords("src/solutions_nyt.txt"),
