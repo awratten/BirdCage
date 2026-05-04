@@ -311,11 +311,11 @@ export function createWeaverGame(canvas, ctx) {
             }
         }
     }
-    function wasTargetLetterGuessed(letter) {
+    function wasTargetLetterGuessed(letter, col) {
         if (!letter)
             return false;
         for (const guess of guesses) {
-            if (guess.includes(letter))
+            if ((guess[col] ?? "").toUpperCase() === letter.toUpperCase())
                 return true;
         }
         return false;
@@ -324,7 +324,7 @@ export function createWeaverGame(canvas, ctx) {
         const letters = targetWord.toUpperCase().split("");
         for (let col = 0; col < BOARD_COLS; col++) {
             const letter = letters[col];
-            const isRevealed = letter ? wasTargetLetterGuessed(letter) : false;
+            const isRevealed = letter ? wasTargetLetterGuessed(letter, col) : false;
             const tileColor = isRevealed ? "#6aaa64" : "#EEE";
             const textColor = isRevealed ? "#fff" : "#000";
             drawRoundRect(row, col, tileColor);
