@@ -1,6 +1,7 @@
 ﻿import type { Game } from "./types.js";
 import { GAME_REGISTRY } from "./registry.js";
 import type { GameEntry } from "./registry.js";
+import { GameId } from "./registry.js";
 
 // ─── canvas setup ────────────────────────────────────────────────────────────
 
@@ -49,5 +50,7 @@ async function loadGame(entry: GameEntry): Promise<void> {
     await game.start();
 }
 
-// Load the default game (first entry in the registry)
-await loadGame(GAME_REGISTRY[0]!);
+// Load the default game.
+const defaultEntry = GAME_REGISTRY.find((entry) => entry.id === GameId.Weaver) ?? GAME_REGISTRY[0];
+if (!defaultEntry) throw new Error("No games registered");
+await loadGame(defaultEntry);

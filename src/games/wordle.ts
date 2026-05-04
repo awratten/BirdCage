@@ -99,7 +99,7 @@ export function createWordleGame(canvas: HTMLCanvasElement, ctx: CanvasRendering
     let lastInputSource: "keyboard" | "touch" | "mouse" | null = null;
 
     // Event listener references (assigned/replaced each start())
-    let _onKeyDown: (e: KeyboardEvent) => void          = () => {};
+    let _onKeyDown: (e: KeyboardEvent) => void           = () => {};
     let _onResize: () => void                            = () => {};
     let _onOrientationChange: () => void                 = () => {};
     let _onMouseUp: (e: MouseEvent) => void              = () => {};

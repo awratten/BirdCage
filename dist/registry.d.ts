@@ -1,6 +1,7 @@
 import type { GameFactory } from "./types.js";
 export declare enum GameId {
-    Wordle = "wordle"
+    Wordle = "wordle",
+    Weaver = "weaver"
 }
 export interface GameEntry {
     id: GameId;
