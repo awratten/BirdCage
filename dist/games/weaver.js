@@ -472,9 +472,11 @@ export function createWeaverGame(canvas, ctx) {
         optimalMoves = puzzle.optimalMoves;
         optimalWordsBetween = puzzle.optimalWordsBetween;
         const optimalPath = getShortestPath(startWord, targetWord);
-        if (optimalPath.length > 0) {
-            console.debug(`[Weaver] optimal path (${optimalPath.length - 1} moves): ${optimalPath.join(" -> ")}`);
-        }
+        // if (optimalPath.length > 0) {
+        // 	console.debug(
+        // 		`[Weaver] optimal path (${optimalPath.length - 1} moves): ${optimalPath.join(" -> ")}`
+        // 	);
+        // }
         destroyed = false;
         userInput = "";
         guesses = [];
