@@ -8,7 +8,7 @@ var GameState;
 export function createWeaverGame(canvas, ctx) {
     // Keyboard sizing and layout mirrors Wordle so keys feel identical.
     const MAX_COLS = 4;
-    const MAX_VISIBLE_GUESSES = 2;
+    const MAX_VISIBLE_GUESSES = 22;
     const KEYBOARD_PADDING = 10;
     const KEYBOARD_HEIGHT_PCT = 0.25;
     const MIN_KEYBOARD_HEIGHT = 80;
